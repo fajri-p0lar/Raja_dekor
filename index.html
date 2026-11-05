@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prototipe Lengkap Sistem Informasi Raja Dekor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 p-6">
+
+  <div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
+    <header class="bg-indigo-900 text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <h1 class="text-2xl font-bold">Prototipe Sistem Informasi Raja Dekor</h1>
+        <p class="text-indigo-200 text-sm">Implementasi Use Case & Activity Diagram (5 Modul Aktor)</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="loadAllData()" class="bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm font-medium transition">
+          🔄 Refresh Data
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigasi Tab Modul Aktor -->
+    <nav class="flex space-x-2 border-b border-slate-300 pb-2">
+      <button onclick="switchTab('admin')" id="tab-admin" class="tab-btn px-4 py-2 font-semibold text-sm rounded-lg bg-indigo-600 text-white shadow">
+        🛒 Modul Admin & Kasir
+      </button>
+      <button onclick="switchTab('produksi')" id="tab-produksi" class="tab-btn px-4 py-2 font-semibold text-sm rounded-lg text-slate-600 hover:bg-slate-200">
+        🛠️ Modul Tim Produksi (SPK)
+      </button>
+      <button onclick="switchTab('owner')" id="tab-owner" class="tab-btn px-4 py-2 font-semibold text-sm rounded-lg text-slate-600 hover:bg-slate-200">
+        📈 Modul Owner (Laporan)
+      </button>
+    </nav>
+
+    <!-- TAB 1: MODUL ADMIN & KASIR -->
+    <div id="content-admin" class="tab-content grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Form Input Transaksi -->
+      <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
+        <h2 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">➕ Form Transaksi Penjualan (UC-01 & UC-02)</h2>
+        <form id="formTransaksi" onsubmit="handleSimpanTransaksi(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">No. Nota / Transaksi</label>
+            <input type="text" id="noNota" required placeholder="TRX-202611-001" class="w-full border rounded-lg p-2 text-sm border-slate-300">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nama Pelanggan</label>
+            <input type="text" id="namaPelanggan" required placeholder="Masukkan nama pemesan" class="w-full border rounded-lg p-2 text-sm border-slate-300">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Sumber Order</label>
+              <select id="sumberOrder" class="w-full border rounded-lg p-2 text-sm border-slate-300 bg-white">
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Shopee">Shopee</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tanggal</label>
+              <input type="date" id="tanggal" required class="w-full border rounded-lg p-2 text-sm border-slate-300">
+            </div>
+          </div>
+          <div class="border-t pt-3">
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Pilih Barang Dekorasi</label>
+            <select id="selectBarang" onchange="updateSubtotal()" class="w-full border rounded-lg p-2 text-sm border-slate-300 bg-white">
+              <option value="">-- Pilih Barang --</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Jumlah (Qty)</label>
+              <input type="number" id="jumlah" min="1" value="1" onchange="updateSubtotal()" onkeyup="updateSubtotal()" class="w-full border rounded-lg p-2 text-sm border-slate-300">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Total (Rp)</label>
+              <input type="number" id="totalBayar" readonly class="w-full border rounded-lg p-2 text-sm bg-slate-100 font-bold border-slate-300">
+            </div>
+          </div>
+          <button type="submit" id="btnSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg shadow transition text-sm">
+            💾 Simpan Transaksi & Terbitkan SPK
+          </button>
+        </form>
+      </div>
+
+      <!-- Master Stok Barang Gudang -->
+      <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
+        <h2 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">📦 Master Stok Gudang (UC-03)</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-slate-50 border-b text-xs font-semibold text-slate-600 uppercase">
+                <th class="p-2">ID</th>
+                <th class="p-2">Nama Barang</th>
+                <th class="p-2">Harga</th>
+                <th class="p-2 text-center">Stok Fisik</th>
+              </tr>
+            </thead>
+            <tbody id="tabelBarangBody">
+              <tr><td colspan="4" class="p-4 text-center text-slate-400">Memuat stok...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: MODUL TIM PRODUKSI (SPK) -->
+    <div id="content-produksi" class="tab-content hidden bg-white p-6 rounded-xl shadow border border-slate-200">
+      <h2 class="text-lg font-bold text-slate-900 mb-2 border-b pb-2">🛠️ Daftar Surat Perintah Kerja / SPK Custom (UC-04)</h2>
+      <p class="text-xs text-slate-500 mb-4">Tim produksi dapat mengonfirmasi status pengerjaan barang dekorasi custom di sini.</p>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-slate-50 border-b text-xs font-semibold text-slate-600 uppercase">
+              <th class="p-3">No. Nota</th>
+              <th class="p-3">Pelanggan</th>
+              <th class="p-3">Sumber Order</th>
+              <th class="p-3">Status Pembayaran</th>
+              <th class="p-3">Status Pengerjaan SPK</th>
+              <th class="p-3 text-center">Aksi Produksi</th>
+            </tr>
+          </thead>
+          <tbody id="tabelSPKBody">
+            <tr><td colspan="6" class="p-4 text-center text-slate-400">Memuat SPK...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: MODUL OWNER (LAPORAN) -->
+    <div id="content-owner" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-indigo-900 text-white p-5 rounded-xl shadow">
+          <p class="text-xs font-semibold uppercase text-indigo-200">Total Omzet Penjualan</p>
+          <h3 id="statTotalOmzet" class="text-2xl font-bold mt-1">Rp 0</h3>
+        </div>
+        <div class="bg-emerald-700 text-white p-5 rounded-xl shadow">
+          <p class="text-xs font-semibold uppercase text-emerald-200">Total Transaksi Berhasil</p>
+          <h3 id="statTotalTransaksi" class="text-2xl font-bold mt-1">0 Transaksi</h3>
+        </div>
+        <div class="bg-amber-600 text-white p-5 rounded-xl shadow">
+          <p class="text-xs font-semibold uppercase text-amber-200">SPK Dalam Produksi</p>
+          <h3 id="statPendingProduksi" class="text-2xl font-bold mt-1">0 Pesanan</h3>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
+        <h2 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">📊 Rekapitulasi Laporan Bulanan Owner (UC-05)</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-slate-50 border-b text-xs font-semibold text-slate-600 uppercase">
+                <th class="p-3">No. Nota</th>
+                <th class="p-3">Tanggal</th>
+                <th class="p-3">Pelanggan</th>
+                <th class="p-3">Sumber</th>
+                <th class="p-3">Total Nominal</th>
+                <th class="p-3">Status Pengerjaan</th>
+              </tr>
+            </thead>
+            <tbody id="tabelLaporanBody">
+              <tr><td colspan="6" class="p-4 text-center text-slate-400">Memuat laporan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ⚠️ TEMPEL URL APPS SCRIPT SAMA SEPERTI SEBELUMNYA ⚠️
+    const API_URL = "https://script.google.com/macros/s/AKfycbwpw1pucQdEgQnmj-AOZsfEqWawfOF5HyvlF5JC2dn4EEa5XgcHK-tLCS34ofnuqOGMVQ/exec";
+
+    let dataBarangCache = [];
+    let dataPenjualanCache = [];
+
+    document.getElementById('tanggal').valueAsDate = new Date();
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('bg-indigo-600', 'text-white', 'shadow');
+        el.classList.add('text-slate-600');
+      });
+
+      document.getElementById(`content-${tabName}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tabName}`);
+      activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow');
+      activeBtn.classList.remove('text-slate-600');
+    }
+
+    async function loadAllData() {
+      await loadDataBarang();
+      await loadDataPenjualan();
+    }
+
+    async function loadDataBarang() {
+      try {
+        const res = await fetch(`${API_URL}?action=getBarang`);
+        const result = await res.json();
+        if (result.status === "success") {
+          dataBarangCache = result.data;
+          renderTabelBarang(result.data);
+          renderSelectOptions(result.data);
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    async function loadDataPenjualan() {
+      try {
+        const res = await fetch(`${API_URL}?action=getPenjualan`);
+        const result = await res.json();
+        if (result.status === "success") {
+          dataPenjualanCache = result.data;
+          renderTabelSPK(result.data);
+          renderModulOwner(result.data);
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    function renderTabelBarang(data) {
+      const tbody = document.getElementById('tabelBarangBody');
+      tbody.innerHTML = data.map(b => `
+        <tr class="border-b hover:bg-slate-50">
+          <td class="p-2 font-mono text-xs text-slate-500">${b.ID_Barang || b.idBarang}</td>
+          <td class="p-2 font-medium">${b.Nama_Barang || b.namaBarang}</td>
+          <td class="p-2">Rp ${(b.Harga_Satuan || b.hargaSatuan || 0).toLocaleString('id-ID')}</td>
+          <td class="p-2 text-center font-bold ${b.Stok_Tersedia < 5 ? 'text-red-600' : 'text-emerald-600'}">
+            ${b.Stok_Tersedia || b.stokTersedia}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderSelectOptions(data) {
+      const select = document.getElementById('selectBarang');
+      select.innerHTML = '<option value="">-- Pilih Barang --</option>' + 
+        data.map(b => `<option value="${b.ID_Barang}" data-harga="${b.Harga_Satuan}">${b.Nama_Barang} (Stok: ${b.Stok_Tersedia})</option>`).join('');
+    }
+
+    function renderTabelSPK(data) {
+      const tbody = document.getElementById('tabelSPKBody');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada SPK pengerjaan.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(p => {
+        const isSelesai = p.Status_Pengerjaan === 'Selesai';
+        return `
+          <tr class="border-b hover:bg-slate-50">
+            <td class="p-3 font-mono font-bold text-xs">${p.No_Nota}</td>
+            <td class="p-3">${p.Nama_Pelanggan}</td>
+            <td class="p-3"><span class="px-2 py-1 bg-slate-100 rounded text-xs">${p.Sumber_Order}</span></td>
+            <td class="p-3 text-emerald-600 font-medium">${p.Status_Pembayaran}</td>
+            <td class="p-3 font-bold ${isSelesai ? 'text-emerald-600' : 'text-amber-600'}">
+              ${p.Status_Pengerjaan}
+            </td>
+            <td class="p-3 text-center">
+              ${isSelesai ? '<span class="text-xs text-slate-400">Finished</span>' : `
+                <button onclick="updateStatusSPK('${p.No_Nota}', 'Selesai')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded transition">
+                  ✓ Selesaikan SPK
+                </button>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderModulOwner(data) {
+      let totalOmzet = 0;
+      let pendingProduksi = 0;
+
+      data.forEach(p => {
+        totalOmzet += parseFloat(p.Total_Bayar || 0);
+        if (p.Status_Pengerjaan !== 'Selesai') pendingProduksi++;
+      });
+
+      document.getElementById('statTotalOmzet').innerText = `Rp ${totalOmzet.toLocaleString('id-ID')}`;
+      document.getElementById('statTotalTransaksi').innerText = `${data.length} Transaksi`;
+      document.getElementById('statPendingProduksi').innerText = `${pendingProduksi} Pesanan`;
+
+      const tbody = document.getElementById('tabelLaporanBody');
+      tbody.innerHTML = data.map(p => `
+        <tr class="border-b hover:bg-slate-50">
+          <td class="p-3 font-mono text-xs">${p.No_Nota}</td>
+          <td class="p-3">${p.Tanggal ? new Date(p.Tanggal).toLocaleDateString('id-ID') : '-'}</td>
+          <td class="p-3 font-medium">${p.Nama_Pelanggan}</td>
+          <td class="p-3">${p.Sumber_Order}</td>
+          <td class="p-3 font-bold">Rp ${(p.Total_Bayar || 0).toLocaleString('id-ID')}</td>
+          <td class="p-3 font-medium">${p.Status_Pengerjaan}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function updateStatusSPK(noNota, statusBaru) {
+      if (!confirm(`Konfirmasi menyelesaikan SPK untuk nota ${noNota}?`)) return;
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "updateStatusProduksi",
+            payload: { noNota: noNota, statusPengerjaan: statusBaru }
+          })
+        });
+        alert("✅ Status SPK pengerjaan berhasil diperbarui!");
+        loadAllData();
+      } catch (err) { alert("❌ Gagal update status."); }
+    }
+
+    function updateSubtotal() {
+      const select = document.getElementById('selectBarang');
+      const selectedOption = select.options[select.selectedIndex];
+      const harga = selectedOption ? parseFloat(selectedOption.getAttribute('data-harga') || 0) : 0;
+      const jumlah = parseInt(document.getElementById('jumlah').value || 1);
+      document.getElementById('totalBayar').value = harga * jumlah;
+    }
+
+    async function handleSimpanTransaksi(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.innerText = "⏳ Memproses...";
+
+      const idBarang = document.getElementById('selectBarang').value;
+      const totalBayar = parseFloat(document.getElementById('totalBayar').value);
+      const jumlah = parseInt(document.getElementById('jumlah').value);
+
+      const payload = {
+        action: "tambahPenjualan",
+        payload: {
+          noNota: document.getElementById('noNota').value,
+          tanggal: document.getElementById('tanggal').value,
+          namaPelanggan: document.getElementById('namaPelanggan').value,
+          sumberOrder: document.getElementById('sumberOrder').value,
+          totalBayar: totalBayar,
+          statusPembayaran: "Lunas",
+          statusPengerjaan: "Dalam Produksi",
+          items: [{ idBarang: idBarang, jumlah: jumlah, subtotal: totalBayar }]
+        }
+      };
+
+      try {
+        await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+        alert("✅ Transaksi & SPK berhasil dicatat!");
+        document.getElementById('formTransaksi').reset();
+        document.getElementById('tanggal').valueAsDate = new Date();
+        loadAllData();
+      } catch (err) { alert("❌ Gagal simpan transaksi."); } 
+      finally { btn.disabled = false; btn.innerText = "💾 Simpan Transaksi & Terbitkan SPK"; }
+    }
+
+    loadAllData();
+  </script>
+</body>
+</html>
